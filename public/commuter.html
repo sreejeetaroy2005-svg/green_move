@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commuter Dashboard | GreenMove</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container nav-content">
+      <div class="logo">
+        <span class="logo-icon">🌿</span> GreenMove
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <span id="user-greeting"></span>
+        <button onclick="logout()" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="grid grid-4 mb-4">
+      <div class="glass-panel text-center">
+        <h4 class="text-muted">🌿 CO₂ Saved</h4>
+        <div class="stat-value text-gradient" id="stat-co2">0kg</div>
+      </div>
+      <div class="glass-panel text-center">
+        <h4 class="text-muted">🚲 Trips</h4>
+        <div class="stat-value" id="stat-trips">0</div>
+      </div>
+      <div class="glass-panel text-center">
+        <h4 class="text-muted">🔥 Streak</h4>
+        <div class="stat-value" id="stat-streak" style="color: #ff9800;">0 Days</div>
+      </div>
+      <div class="glass-panel text-center">
+        <h4 class="text-muted">⭐ Points</h4>
+        <div class="stat-value" id="stat-points" style="color: #ffd700;">0</div>
+      </div>
+    </div>
+
+    <div class="grid grid-3">
+      <!-- Left Column (Log Trip & Leaderboard) -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="glass-panel">
+          <h3 class="mb-4">Log My Green Trip</h3>
+          <form id="log-trip-form">
+            <div class="form-group">
+              <label>Transport Mode</label>
+              <select id="mode" class="form-control" required>
+                <option value="walk">🚶 Walk</option>
+                <option value="cycle">🚲 Cycle</option>
+                <option value="bus">🚌 City Bus</option>
+                <option value="metro">🚆 Metro / Rail</option>
+                <option value="carpool">🚗 Carpool</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Distance (km)</label>
+              <input type="number" id="distance" step="0.1" class="form-control" required placeholder="e.g. 5.5">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Trip</button>
+          </form>
+        </div>
+
+        <div class="glass-panel">
+          <div class="flex-between mb-4">
+            <h3>My Badge</h3>
+            <span class="badge" id="current-badge">Loading...</span>
+          </div>
+          
+          <h4 class="mt-4 mb-4">Top 5 Commuters</h4>
+          <div id="leaderboard-list">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column (History & Charts) -->
+      <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 24px;">
+        <div class="glass-panel">
+          <h3 class="mb-4">Trip History</h3>
+          <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+            <table id="trips-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Mode</th>
+                  <th>Distance</th>
+                  <th>CO₂ Saved</th>
+                  <th>Points</th>
+                  <th>Verified Tx</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="glass-panel">
+            <h4 class="text-center mb-4">Modal Share</h4>
+            <canvas id="modeChart"></canvas>
+          </div>
+          <div class="glass-panel">
+            <h4 class="text-center mb-4">Points Redemption</h4>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <button class="btn btn-outline" onclick="redeem('Coffee Voucher', 500)">☕ Coffee Voucher (500 pts)</button>
+              <button class="btn btn-outline" onclick="redeem('Transit Pass', 1000)">🚆 Transit Pass (1000 pts)</button>
+              <button class="btn btn-outline" onclick="redeem('Company Swag', 2000)">👕 Company Swag (2000 pts)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    checkAuth(['commuter']);
+
+    const modeIcons = {
+      walk: '🚶', cycle: '🚲', bus: '🚌', metro: '🚆', carpool: '🚗'
+    };
+
+    async function loadDashboard() {
+      try {
+        // Load stats
+        const rewards = await apiCall('/rewards/my');
+        document.getElementById('stat-points').innerText = rewards.current_points;
+        document.getElementById('current-badge').innerText = rewards.badge;
+
+        // Load trips
+        const trips = await apiCall('/trips/my');
+        document.getElementById('stat-trips').innerText = trips.length;
+        
+        let totalCo2 = 0;
+        let tbody = '';
+        const modesCount = {};
+
+        trips.forEach(t => {
+          totalCo2 += t.co2_saved_kg;
+          modesCount[t.mode] = (modesCount[t.mode] || 0) + 1;
+          const shortHash = t.tx_hash.substring(0, 10) + '...';
+          tbody += `
+            <tr>
+              <td>${new Date(t.created_at).toLocaleDateString()}</td>
+              <td style="text-transform: capitalize;">${modeIcons[t.mode] || '🚗'} ${t.mode}</td>
+              <td>${t.distance_km}km</td>
+              <td class="text-gradient">${t.co2_saved_kg}kg</td>
+              <td>+${t.points_earned}</td>
+              <td><span class="tx-hash">✅ ${shortHash}</span></td>
+            </tr>
+          `;
+        });
+        
+        document.getElementById('stat-co2').innerText = totalCo2.toFixed(1) + 'kg';
+        document.getElementById('trips-table').querySelector('tbody').innerHTML = tbody;
+
+        // Hack for streak (mocking using latest trips)
+        document.getElementById('stat-streak').innerText = trips.length > 0 ? '10 Days' : '0 Days';
+
+        // Render Chart
+        renderChart(modesCount);
+
+        // Load Leaderboard
+        const leaders = await apiCall('/trips/leaderboard');
+        let leaderHtml = '';
+        leaders.forEach((l, i) => {
+          leaderHtml += `
+            <div class="flex-between" style="padding: 10px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <strong>${i+1}. ${l.name.split(' ')[0]}</strong>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">${l.badge}</div>
+              </div>
+              <div class="text-gradient font-weight-bold">${l.total_co2_saved_kg}kg</div>
+            </div>
+          `;
+        });
+        document.getElementById('leaderboard-list').innerHTML = leaderHtml;
+
+      } catch (err) {
+        showToast("Error loading dashboard: " + err.message);
+      }
+    }
+
+    function renderChart(modesData) {
+      const ctx = document.getElementById('modeChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(modesData).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+          datasets: [{
+            data: Object.values(modesData),
+            backgroundColor: ['#00e676', '#00d2ff', '#ff9800', '#f44336', '#9c27b0'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { labels: { color: '#f0f6fc' } }
+          }
+        }
+      });
+    }
+
+    document.getElementById('log-trip-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const mode = document.getElementById('mode').value;
+      const distance_km = parseFloat(document.getElementById('distance').value);
+
+      try {
+        const data = await apiCall('/trips', 'POST', { mode, distance_km });
+        showToast(`Trip logged! You earned ${data.points_earned} points and saved ${data.co2_saved_kg}kg of CO2!`);
+        setTimeout(() => location.reload(), 2000);
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+
+    async function redeem(reward_type, points_spent) {
+      try {
+        await apiCall('/rewards/redeem', 'POST', { reward_type, points_spent });
+        showToast(`Redeemed ${reward_type} successfully!`);
+        setTimeout(() => location.reload(), 2000);
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

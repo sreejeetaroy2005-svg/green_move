@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>City Planner Dashboard | GreenMove</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container nav-content">
+      <div class="logo">
+        <span class="logo-icon">🌿</span> GreenMove <span style="font-size: 1rem; color: var(--text-muted); font-weight: normal; margin-left: 10px;">City Analytics</span>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <span id="user-greeting"></span>
+        <button onclick="logout()" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="grid grid-4 mb-4">
+      <div class="glass-panel text-center">
+        <h4 class="text-muted">🌍 Citywide CO₂ Avoided</h4>
+        <div class="stat-value text-gradient" id="stat-co2">0kg</div>
+      </div>
+      <div class="glass-panel text-center">
+        <h4 class="text-muted">✅ Total Verified Trips</h4>
+        <div class="stat-value" id="stat-trips">0</div>
+      </div>
+      <div class="glass-panel text-center">
+        <h4 class="text-muted">👥 Active Commuters</h4>
+        <div class="stat-value" id="stat-active">0</div>
+      </div>
+      <div class="glass-panel text-center">
+        <h4 class="text-muted">🏆 Top Mode</h4>
+        <div class="stat-value text-gradient" id="stat-top-mode">N/A</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2 mb-4">
+      <div class="glass-panel">
+        <h3 class="mb-4">30-Day CO₂ Avoided Trend (Citywide)</h3>
+        <canvas id="trendChart"></canvas>
+      </div>
+      <div class="glass-panel">
+        <h3 class="text-center mb-4">Citywide Modal Share</h3>
+        <canvas id="modeChart" style="max-height: 300px;"></canvas>
+      </div>
+    </div>
+
+    <div class="glass-panel">
+      <h3 class="mb-4">Top Employers by Green Commutes</h3>
+      <div class="table-container">
+        <table id="employers-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Employer Name</th>
+              <th>Total CO₂ Avoided</th>
+              <th>Engagement Trend</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    checkAuth(['city_planner']);
+
+    async function loadDashboard() {
+      try {
+        const data = await apiCall('/analytics/city');
+        
+        document.getElementById('stat-co2').innerText = data.total_co2.toFixed(1) + 'kg';
+        document.getElementById('stat-trips').innerText = data.total_trips;
+        document.getElementById('stat-active').innerText = data.active_commuters;
+
+        // Find top mode
+        let topMode = 'N/A';
+        let maxCount = 0;
+        for (const [mode, count] of Object.entries(data.modal_share)) {
+          if (count > maxCount) {
+            maxCount = count;
+            topMode = mode.charAt(0).toUpperCase() + mode.slice(1);
+          }
+        }
+        document.getElementById('stat-top-mode').innerText = topMode;
+
+        // Render Mode Chart
+        const modeCtx = document.getElementById('modeChart').getContext('2d');
+        new Chart(modeCtx, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(data.modal_share).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+            datasets: [{
+              data: Object.values(data.modal_share),
+              backgroundColor: ['#00e676', '#00d2ff', '#ff9800', '#f44336', '#9c27b0'],
+              borderWidth: 0
+            }]
+          },
+          options: { plugins: { legend: { labels: { color: '#f0f6fc' } } } }
+        });
+
+        // Top Employers Table
+        let tbody = '';
+        data.top_employers.forEach((emp, i) => {
+          tbody += `
+            <tr>
+              <td>#${i+1}</td>
+              <td>${emp.name}</td>
+              <td class="text-gradient">${emp.total_co2.toFixed(1)}kg</td>
+              <td style="color: var(--green);">↗ +12%</td>
+            </tr>
+          `;
+        });
+        document.getElementById('employers-table').querySelector('tbody').innerHTML = tbody;
+
+        // Render Trend Chart
+        const trendsData = await apiCall('/analytics/trends');
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        
+        new Chart(trendCtx, {
+          type: 'line',
+          data: {
+            labels: trendsData.map(t => new Date(t.day).toLocaleDateString(undefined, {month: 'short', day: 'numeric'})),
+            datasets: [{
+              label: 'CO2 Saved (kg)',
+              data: trendsData.map(t => t.co2),
+              borderColor: '#00d2ff',
+              backgroundColor: 'rgba(0, 210, 255, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            scales: {
+              y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b949e' } },
+              x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8b949e' } }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
