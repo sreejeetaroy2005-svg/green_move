@@ -23,13 +23,14 @@ GreenMove solves the incentive gap by tracking, verifying, and rewarding eco-fri
 
 ---
 
-## ✨ Key Features
-*   📱 **WhatsApp-Native Logging:** Zero friction. Log trips and check balances entirely via WhatsApp text.
+## ✨ Key Features (Round 2 Upgrades)
+*   📱 **NLP WhatsApp Bot:** Log trips using natural language ("I took the bus for 12km"), view leaderboards, and check stats directly in WhatsApp.
 *   🔗 **Blockchain-Verified Ledger:** Every trip has an immutable cryptographic hash, ensuring data integrity for CSR reporting.
-*   📊 **Multi-Stakeholder Dashboards:** Dedicated, role-based views for Commuters, Employers, and City Planners.
-*   🧮 **Scientific Carbon Math:** Uses real baseline emission factors (Private Car: ~192g CO₂/km vs. City Bus: ~89g CO₂/km).
-*   🏆 **Gamified Streaks & Badges:** Users earn multipliers for consecutive green days and unlock badges like *Cycle Hero* and *Carbon Saver*.
-*   📥 **One-Click Audits:** Employers can instantly download verified CSV reports of all employee green commutes.
+*   📊 **Real-Time Dashboards:** Debounced CO2 previews, pagination, and live 30-second polling for city-wide analytics.
+*   🧮 **Scientific Carbon Math:** Uses real baseline emission factors and calculates real-world equivalents (e.g. "equivalent to planting 3 trees").
+*   🏆 **Gamified Streaks & Badges:** Users earn multipliers for consecutive green days, and streak resets if a day is skipped.
+*   📥 **One-Click Audits:** Employers can filter by date and download verified CSV reports of all employee green commutes.
+*   🛡️ **Hardened Backend:** Includes `helmet.js`, `express-rate-limit`, input validation, and a standardized `{ success: true, data: {} }` API response structure.
 
 ---
 
@@ -38,11 +39,11 @@ GreenMove solves the incentive gap by tracking, verifying, and rewarding eco-fri
 | Component | Technology |
 | :--- | :--- |
 | **Frontend** | HTML5, Vanilla CSS (Glassmorphism UI), Vanilla JS, Chart.js |
-| **Backend** | Node.js, Express.js |
-| **Database** | SQLite3 (Adaptable to PostgreSQL) |
+| **Backend** | Node.js, Express.js, node-cron |
+| **Database** | PostgreSQL (Neon) / SQLite fallback for local dev |
 | **Authentication** | JWT (JSON Web Tokens), Bcrypt |
-| **Ledger / Crypto** | Node `crypto` module (SHA-256 Hashing) |
-| **Bot Integration** | REST Webhooks (Designed for Twilio/WhatsApp Business API) |
+| **Security** | Helmet, Express Rate Limit |
+| **Bot Integration** | REST Webhooks (Designed for Twilio/WhatsApp) |
 
 ---
 
@@ -57,17 +58,19 @@ GreenMove solves the incentive gap by tracking, verifying, and rewarding eco-fri
     ```bash
     npm install
     ```
-3.  **Seed the database with demo data:**
+3.  **Configure Environment (Optional):**
+    Copy `.env.example` to `.env` and set your secrets.
+4.  **Seed the database with demo data (200+ historical trips):**
     ```bash
     node src/seed.js
     ```
-4.  **Start the server:**
+5.  **Start the server:**
     ```bash
     npm run dev
     # or
     node src/index.js
     ```
-5.  **Access the application:**
+6.  **Access the application:**
     Open [http://localhost:3000](http://localhost:3000) in your browser.  
     *(Demo Accounts: `arjun@techcorp.com`, `hr@techcorp.com`, `planner@blr.gov.in` | Password: `password123`)*
 
@@ -77,12 +80,13 @@ GreenMove solves the incentive gap by tracking, verifying, and rewarding eco-fri
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
+| `GET`  | `/api/health` | System health check and uptime |
 | `POST` | `/api/auth/login` | Authenticate and return JWT |
-| `POST` | `/api/whatsapp` | Webhook for processing WhatsApp commute texts |
-| `POST` | `/api/trips` | Log a green trip manually (Dashboard) |
-| `GET`  | `/api/trips/leaderboard` | Get top 5 commuters by CO₂ saved |
-| `GET`  | `/api/rewards/my` | Get current points and badge status |
-| `GET`  | `/api/analytics/city` | Citywide stats: CO₂, active users, modal share |
+| `POST` | `/api/whatsapp` | NLP Webhook for WhatsApp logging |
+| `POST` | `/api/trips` | Log a green trip manually |
+| `POST` | `/api/trips/preview` | Real-time CO2 calculation preview |
+| `GET`  | `/api/rewards/my` | Get current points, badge progress, and tx history |
+| `GET`  | `/api/analytics/city` | Citywide stats (Live polling enabled) |
 
 ---
 

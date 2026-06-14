@@ -1,6 +1,8 @@
+// GreenMove — db.js — refined for Round 2
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 const path = require('path');
+const logger = require('./logger');
 
 let dbInstance = null;
 
@@ -17,6 +19,8 @@ async function getDb() {
 }
 
 async function initSchema(db) {
+  logger.info('Initializing database schema (Round 2 Refined)...');
+  
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -56,6 +60,7 @@ async function initSchema(db) {
       total_points INTEGER,
       current_streak INTEGER,
       badge TEXT,
+      is_active BOOLEAN DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -75,6 +80,28 @@ async function initSchema(db) {
       points_to_perk_ratio INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS carbon_log (
+      date TEXT,
+      city TEXT,
+      total_co2_kg REAL,
+      total_trips INTEGER,
+      modal_share_json TEXT,
+      PRIMARY KEY (date, city)
+    );
+
+    CREATE TABLE IF NOT EXISTS point_transactions (
+      id TEXT PRIMARY KEY,
+      commuter_id TEXT,
+      amount INTEGER,
+      reason TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Performance Indexes
+    CREATE INDEX IF NOT EXISTS idx_trips_commuter_id ON trips(commuter_id);
+    CREATE INDEX IF NOT EXISTS idx_trips_created_at ON trips(created_at);
+    CREATE INDEX IF NOT EXISTS idx_commuters_employer_id ON commuters(employer_id);
   `);
 }
 

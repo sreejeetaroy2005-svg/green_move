@@ -3,72 +3,179 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GreenMove | Login</title>
+  <title>GreenMove — Blockchain-Verified Green Commuting</title>
+  <meta name="description" content="The only green commute platform where every trip is blockchain-verified, WhatsApp-loggable, and redeemable for real employer rewards.">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/app.js"></script>
+  <style>
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+    .hero-stat {
+      text-align: center;
+    }
+    .hero-stat .val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: var(--green-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-stat .lbl {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .divider {
+      width: 1px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+    .features {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .feature-tag {
+      padding: 5px 12px;
+      background: rgba(0,230,118,0.08);
+      border: 1px solid rgba(0,230,118,0.15);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: var(--green);
+    }
+    .error-msg {
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: #f87171;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      margin-top: -8px;
+      margin-bottom: 12px;
+      display: none;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <div class="container nav-content">
-      <div class="logo">
-        <span class="logo-icon">🌿</span> GreenMove
+  <div class="grid-bg"></div>
+
+  <div class="login-page">
+    <div class="login-container">
+      <!-- Logo & Brand -->
+      <div class="login-logo">
+        <span class="logo-emoji">🌿</span>
+        <h1>GreenMove</h1>
+        <p>Every trip verified. Every commute rewarded.</p>
+
+        <div class="features">
+          <span class="feature-tag">⛓ Blockchain-Verified</span>
+          <span class="feature-tag">📱 WhatsApp Logging</span>
+          <span class="feature-tag">🏆 Employer Rewards</span>
+        </div>
+      </div>
+
+      <!-- Login Card -->
+      <div class="glass-card" style="animation-delay: 0.15s;">
+        <h3 style="text-align: center; margin-bottom: 24px; font-size: 1rem; color: var(--text-main); text-transform: none; letter-spacing: 0;">Sign in to your account</h3>
+
+        <div id="error-msg" class="error-msg"></div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="arjun@techcorp.com" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+          </div>
+          <button type="submit" id="login-btn">Sign In →</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">Demo Accounts (pwd: password123)</p>
+          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button class="secondary" style="width: auto; padding: 6px 12px; font-size: 0.75rem;" onclick="quickLogin('arjun@techcorp.com')">👤 Commuter</button>
+            <button class="secondary" style="width: auto; padding: 6px 12px; font-size: 0.75rem;" onclick="quickLogin('hr@techcorp.com')">🏢 Employer</button>
+            <button class="secondary" style="width: auto; padding: 6px 12px; font-size: 0.75rem;" onclick="quickLogin('planner@blr.gov.in')">📊 Planner</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Stats -->
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="val">276t</div>
+          <div class="lbl">CO₂ Avoided / Mo</div>
+        </div>
+        <div class="divider"></div>
+        <div class="hero-stat">
+          <div class="val">10K+</div>
+          <div class="lbl">Active Commuters</div>
+        </div>
+        <div class="divider"></div>
+        <div class="hero-stat">
+          <div class="val">100%</div>
+          <div class="lbl">Blockchain Verified</div>
+        </div>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="container" style="display: flex; justify-content: center; align-items: center; min-height: 70vh;">
-    <div class="glass-panel" style="width: 100%; max-width: 400px;">
-      <h2 class="text-center text-gradient mb-4">Welcome Back</h2>
-      
-      <form id="login-form">
-        <div class="form-group">
-          <label>Email Address</label>
-          <input type="email" id="email" class="form-control" required value="arjun@techcorp.com">
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="password" class="form-control" required value="password123">
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
-      </form>
-      
-      <p class="text-center mt-4 text-muted" style="font-size: 0.9rem;">
-        Demo accounts:<br>
-        Commuter: arjun@techcorp.com<br>
-        Employer: hr@techcorp.com<br>
-        City Planner: planner@blr.gov.in<br>
-        (Password: password123)
-      </p>
-    </div>
-  </main>
-
-  <script src="js/app.js"></script>
   <script>
+    // Redirect if already logged in
+    if (getToken()) {
+      const role = getRole();
+      if (role === 'commuter') window.location.href = 'commuter.html';
+      else if (role === 'employer') window.location.href = 'employer.html';
+      else if (role === 'city_planner') window.location.href = 'analytics.html';
+    }
+
+    async function quickLogin(email) {
+      document.getElementById('email').value = email;
+      document.getElementById('password').value = 'password123';
+      document.getElementById('login-form').dispatchEvent(new Event('submit'));
+    }
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      const errEl = document.getElementById('error-msg');
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+
+      btn.innerText = 'Signing in...';
+      btn.disabled = true;
+      errEl.style.display = 'none';
 
       try {
         const data = await apiCall('/auth/login', 'POST', { email, password });
         localStorage.setItem('token', data.token);
         localStorage.setItem('role', data.role);
         localStorage.setItem('user_name', data.name);
-        
-        if (data.role === 'commuter') window.location.href = 'commuter.html';
-        else if (data.role === 'employer') window.location.href = 'employer.html';
-        else if (data.role === 'city_planner') window.location.href = 'analytics.html';
+
+        btn.innerText = '✅ Welcome!';
+        setTimeout(() => {
+          if (data.role === 'commuter') window.location.href = 'commuter.html';
+          else if (data.role === 'employer') window.location.href = 'employer.html';
+          else if (data.role === 'city_planner') window.location.href = 'analytics.html';
+        }, 400);
       } catch (err) {
-        showToast(err.message);
+        errEl.innerText = 'Invalid credentials. Please try again.';
+        errEl.style.display = 'block';
+        btn.innerText = 'Sign In →';
+        btn.disabled = false;
       }
     });
-
-    // Auto redirect if already logged in
-    if (localStorage.getItem('token')) {
-      const role = localStorage.getItem('role');
-      if (role === 'commuter') window.location.href = 'commuter.html';
-      else if (role === 'employer') window.location.href = 'employer.html';
-      else if (role === 'city_planner') window.location.href = 'analytics.html';
-    }
   </script>
 </body>
 </html>
