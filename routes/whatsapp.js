@@ -26,7 +26,7 @@ router.post('/', async (req, res) => {
       const db = await getDb();
       const commuter = await db.get('SELECT * FROM commuters WHERE id = ?', [commuter_id]);
       if (!commuter) return res.status(404).json({ reply: 'User not found.' });
-      return res.json({ reply: `Your Score: n🌱 Points: ${commuter.total_points} n🌍 CO2 Saved: ${commuter.total_co2_saved_kg}kg n🏅 Badge: ${commuter.badge}` });
+      return res.json({ reply: `Your Score: \\n🌱 Points: ${commuter.total_points} \\n🌍 CO2 Saved: ${commuter.total_co2_saved_kg}kg \\n🏅 Badge: ${commuter.badge}` });
     }
 
     // Command: "leaderboard"
@@ -37,8 +37,8 @@ router.post('/', async (req, res) => {
         FROM commuters c JOIN users u ON c.user_id = u.id 
         ORDER BY c.total_co2_saved_kg DESC LIMIT 3
       `);
-      let reply = '🏆 *Top 3 Commuters*n';
-      leaders.forEach((l, i) => reply += `${i+1}. ${l.name} - ${l.total_co2_saved_kg}kgn`);
+      let reply = '🏆 *Top 3 Commuters*\\n';
+      leaders.forEach((l, i) => reply += `${i+1}. ${l.name} - ${l.total_co2_saved_kg}kg\\n`);
       return res.json({ reply });
     }
 
@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
     else if (text.includes('metro')) mode = 'metro';
     else if (text.includes('carpool')) mode = 'carpool';
 
-    const distanceMatch = text.match(/(d+(.d+)?)s*km/);
+    const distanceMatch = text.match(/(\d+(\.\d+)?)\s*km/);
     if (!distanceMatch) {
       return res.json({ reply: "I couldn't understand the distance. Please say something like 'cycled 8km today'." });
     }
@@ -90,7 +90,7 @@ router.post('/', async (req, res) => {
     );
 
     const shortHash = tx_hash.substring(0, 8) + '...';
-    const reply = `✅ Trip Logged!nMode: ${mode}nDistance: ${distance_km}kmn🌍 CO2 Saved: ${co2_saved_kg}kgn⭐ Points Earned: ${points_earned}nnTotal Points: ${newTotalPoints}nTx: ${shortHash}nKeep it up! 🌿`;
+    const reply = `✅ Trip Logged!\\nMode: ${mode}\\nDistance: ${distance_km}km\\n🌍 CO2 Saved: ${co2_saved_kg}kg\\n⭐ Points Earned: ${points_earned}\\n\\nTotal Points: ${newTotalPoints}\\nTx: ${shortHash}\\nKeep it up! 🌿`;
 
     res.json({ reply, tx_hash });
   } catch (err) {
